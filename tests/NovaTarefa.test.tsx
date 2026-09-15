@@ -2,31 +2,40 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 import NovaTarefa from '@/components/NovaTarefa';
 
+function obterCampoTitulo(): HTMLInputElement {
+  return screen.getByRole('textbox', { name: /^nova tarefa$/i }) as HTMLInputElement;
+}
+
+function obterBotaoAdicionar(): HTMLButtonElement {
+  return screen.getByRole('button', { name: /^adicionar$/i }) as HTMLButtonElement;
+}
+
 describe('<NovaTarefa />', () => {
   it('renderiza o label, o input e o botao de adicionar', () => {
     render(<NovaTarefa aoAdicionar={jest.fn()} />);
 
-    expect(screen.getByLabelText(/nova tarefa/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/digite o titulo da tarefa/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /adicionar/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^nova tarefa$/i)).toBeInTheDocument();
+    expect(obterCampoTitulo()).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/^digite o titulo da tarefa$/i)).toBeInTheDocument();
+    expect(obterBotaoAdicionar()).toBeInTheDocument();
   });
 
   it('nao chama aoAdicionar e exibe erro quando o input esta vazio', () => {
     const aoAdicionar = jest.fn();
     render(<NovaTarefa aoAdicionar={aoAdicionar} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /adicionar/i }));
+    fireEvent.click(obterBotaoAdicionar());
 
     expect(aoAdicionar).not.toHaveBeenCalled();
-    expect(screen.getByRole('alert')).toHaveTextContent(/informe o titulo da tarefa/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/^informe o titulo da tarefa\.$/i);
   });
 
   it('nao chama aoAdicionar quando o input contem apenas espacos', () => {
     const aoAdicionar = jest.fn();
     render(<NovaTarefa aoAdicionar={aoAdicionar} />);
 
-    fireEvent.change(screen.getByLabelText(/nova tarefa/i), { target: { value: '   ' } });
-    fireEvent.click(screen.getByRole('button', { name: /adicionar/i }));
+    fireEvent.change(obterCampoTitulo(), { target: { value: '   ' } });
+    fireEvent.click(obterBotaoAdicionar());
 
     expect(aoAdicionar).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -36,9 +45,9 @@ describe('<NovaTarefa />', () => {
     const aoAdicionar = jest.fn();
     render(<NovaTarefa aoAdicionar={aoAdicionar} />);
 
-    const input = screen.getByLabelText(/nova tarefa/i) as HTMLInputElement;
+    const input = obterCampoTitulo();
     fireEvent.change(input, { target: { value: '  Comprar cafe  ' } });
-    fireEvent.click(screen.getByRole('button', { name: /adicionar/i }));
+    fireEvent.click(obterBotaoAdicionar());
 
     expect(aoAdicionar).toHaveBeenCalledTimes(1);
     expect(aoAdicionar).toHaveBeenCalledWith('Comprar cafe');
@@ -48,11 +57,11 @@ describe('<NovaTarefa />', () => {
   it('remove a mensagem de erro apos uma submissao valida', () => {
     render(<NovaTarefa aoAdicionar={jest.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /adicionar/i }));
+    fireEvent.click(obterBotaoAdicionar());
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/nova tarefa/i), { target: { value: 'Tarefa valida' } });
-    fireEvent.click(screen.getByRole('button', { name: /adicionar/i }));
+    fireEvent.change(obterCampoTitulo(), { target: { value: 'Tarefa valida' } });
+    fireEvent.click(obterBotaoAdicionar());
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
